@@ -57,7 +57,7 @@ function easyHeading(question,context){return `<div class="easy-heading"><h2>${q
 function drawDensityOverview(){
  $('bubbleDetail').innerHTML=easyHeading('온도를 높이면, 내부 밀도는 어떻게 달라질까?','CBA 1% · 속도 150 mm/s · V/P 90%는 같게 두고 비교')+
  `<div class="density-common"><span>세 조건 모두 같은 치수</span><strong>지름 108 mm × 두께 3.2 mm</strong><b>전체 체적 ${specimenVolume.toFixed(3)} cm³</b></div>
- <div class="density-cards">${focusRows.map(r=>`<article class="density-case"><h3>${r[1]}℃</h3><svg viewBox="0 0 240 110" role="img" aria-label="같은 치수의 원형 시편"><path d="M35 45A85 25 0 0 1 205 45V65A85 25 0 0 1 35 65Z" fill="#9cbdd7" stroke="#7599b7"/><ellipse cx="120" cy="45" rx="85" ry="25" fill="#d2e3f0" stroke="#7599b7"/></svg><span>내부 밀도 <small>(코어밀도)</small></span><strong>${r[9].toFixed(4)}<small> g/cm³</small></strong><p>시편 중량 ${r[4].toFixed(2)} g</p></article>`).join('')}</div>
+ <div class="density-cards">${focusRows.map(r=>`<article class="density-case"><h3>${r[1]}℃</h3><svg viewBox="0 0 240 110" role="img" aria-label="같은 치수의 원형 시편"><path d="M35 45A85 25 0 0 1 205 45V65A85 25 0 0 1 35 65Z" fill="#9cbdd7" stroke="#7599b7"/><ellipse cx="120" cy="45" rx="85" ry="25" fill="#d2e3f0" stroke="#7599b7"/></svg><span>내부 밀도 <small>(코어밀도)</small></span><strong>${r[9].toFixed(4)}<small> g/cm³</small></strong><div class="core-density-meter" role="img" aria-label="코어밀도 공통 눈금 0에서 1, ${r[9]} g/cm³"><i style="width:${r[9]*100}%"></i></div><div class="core-density-scale"><span>0</span><span>1 g/cm³</span></div><p>시편 중량 ${r[4].toFixed(2)} g</p></article>`).join('')}</div>
  <div class="easy-answer">이 세 조건에서는 온도가 높을수록 <b>내부 밀도가 낮아졌음.</b></div>
  <p class="easy-note">여기서 밀도는 <b>내부 폼의 밀도</b>입니다. 기포 속 가스의 밀도는 아닙니다.</p>
  <details class="easy-details" ontoggle="if(this.open)drawBubbleFocusCharts()"><summary>전체 그래프·체적 계산 보기</summary><p>전체 시편 체적 V = π × (10.8 / 2)² × 0.32 = 29.315 cm³. 개별 기포의 체적과는 다릅니다.</p><label>버블 압력 <select id="bubbleFocusPressure" onchange="drawBubbleFocusCharts()"><option value="6">최대</option><option value="7">평균</option></select></label><div id="bubbleFocusCharts"></div></details>`;
@@ -137,7 +137,7 @@ function updateRadiusLab(){
   <svg viewBox="60 0 180 180" role="img" aria-label="반지름 ${(s.radius*100).toFixed(1)}퍼센트, 가스량 ${(s.gas*100).toFixed(1)}퍼센트, 압력 ${s.pressure.toFixed(2)}배">
   <circle cx="150" cy="91" r="65" fill="none" stroke="#c9d7e4" stroke-dasharray="3 4"/><circle cx="150" cy="91" r="${R}" fill="${i===1?'#fff5ed':'#eef6fc'}" stroke="${color}" stroke-width="2"/>${particles}
   <path d="M150 91H${150+R}" stroke="${color}" stroke-width="1.6"/><circle cx="150" cy="91" r="2" fill="${color}"/></svg>
-  <div class="radius-percent">반지름 <b>${(s.radius*100).toFixed(0)}%</b></div>
+  <div class="radius-percent">반지름 <b>${+(s.radius*100).toFixed(1)}%</b><span class="cell-volume">체적 <b>${+(s.volume*100).toFixed(1)}%</b></span></div>
   <div class="gas-amount">가스량 <b>${(s.gas*100).toFixed(0)}%</b><span class="gas-meter"><i style="width:${s.gas/Math.max(...states.map(v=>v.gas))*100}%"></i></span></div>
   <div class="pressure-readout"><span>${pressureLabel}</span><strong>${s.pressure.toFixed(2)}<small>배</small></strong></div>
   <div class="pressure-meter"><i style="width:${s.pressure/Math.max(...states.map(v=>v.pressure))*100}%"></i></div></article>`;

@@ -12,6 +12,7 @@ for (const name of ['focus-data.js', 'bubble.js']) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, name), 'utf8'), context);
 }
 vm.runInContext(html.match(/^function evaluateModel.*$/m)[0], context);
+vm.runInContext(html.match(/^function meanRowsByLevel.*$/m)[0], context);
 const {data, levels, correlations, modelBank, focusRows} = vm.runInContext('({data,levels,correlations,modelBank,focusRows})', context);
 const near = (a,b,why) => assert.ok(Math.abs(a-b) <= 1e-7*Math.max(1,Math.abs(a),Math.abs(b)), `${why}: ${a} != ${b}`);
 assert.equal(data.length,81);
@@ -19,6 +20,18 @@ assert.equal(new Set(data.map(r=>r.slice(0,4).join('/'))).size,81);
 for (const row of data) assert.ok(row.every(Number.isFinite));
 for (let axis=0;axis<4;axis++) for (const level of levels[axis]) {
   assert.equal(data.filter(r=>r[axis]===level).length,27);
+}
+// The three equally weighted level means must recover the overall mean.
+for (let axis=0;axis<4;axis++) {
+  const means=vm.runInContext(`meanRowsByLevel(data,${axis})`,context);
+  assert.deepEqual(Array.from(means,r=>r[axis]),Array.from(levels[axis]));
+  for (let column=4;column<9;column++) {
+    near(means.reduce((sum,r)=>sum+r[column],0)/3,data.reduce((sum,r)=>sum+r[column],0)/81,'balanced level means');
+    for(const mean of means){
+      const group=data.filter(r=>r[axis]===mean[axis]).map(r=>r[column]);
+      assert.ok(mean[column]>=Math.min(...group)&&mean[column]<=Math.max(...group));
+    }
+  }
 }
 function pearson(x,y) {
   const mx=x.reduce((a,b)=>a+b,0)/x.length,my=y.reduce((a,b)=>a+b,0)/y.length;
@@ -60,4 +73,5 @@ for(const ref of html.matchAll(/(?:src|href)="([^"?#]+)(?:[^\"]*)"/g)) {
   if(!ref[1].includes('://')&&!ref[1].startsWith('#'))assert.ok(fs.existsSync(path.join(__dirname,ref[1])),ref[1]);
 }
 for(const script of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))if(script[1].trim())new vm.Script(script[1]);
+new vm.Script(fs.readFileSync(path.join(__dirname,'presentation.js'),'utf8'));
 console.log('PASS: 81 unique factorial conditions, 32 Pearson coefficients, 36 model metrics, 243 model evaluations, radius/pressure states, corrected subset, local assets, script syntax.');
