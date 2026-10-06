@@ -1,0 +1,38 @@
+/* Bubble explanation: a specimen schematic, not a reconstructed micrograph. */
+body.bubble-page{grid-template-rows:auto minmax(0,1fr)}
+body.bubble-page>details{display:none}
+body.bubble-page #charts{display:block;overflow:auto}
+.bubble-workbench{height:100%;min-height:570px;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:12px}
+.bubble-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;background:white;border:1px solid var(--line);border-radius:12px}
+.bubble-modes{display:flex;gap:5px;flex-wrap:wrap}
+.bubble-modes button{font-size:13px;padding:9px 13px;color:var(--muted)}
+.bubble-modes button.active{background:#e9f2fb;color:#205e9c}
+.bubble-tag{font-size:11px;color:var(--muted);white-space:nowrap;border:1px solid var(--line);padding:6px 9px;border-radius:6px}
+.bubble-layout{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(0,1.2fr);gap:12px;min-height:0}
+.specimen-panel{display:flex;flex-direction:column;position:relative;min-height:0;background:#172b40;border:1px solid #243e57;border-radius:14px;overflow:hidden;color:#d8e6f3}
+.bubble-panel-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:18px 20px}
+.bubble-panel-head h2{font-size:16px;margin:0;font-weight:650}
+.bubble-panel-head span{font-size:11px;color:#9bb3ca}
+.specimen-art{width:100%;flex:1;min-height:0;display:block}
+.specimen-panel .specimen-foot{display:flex;gap:12px;justify-content:space-between;padding:15px 20px;font-size:11px;color:#9bb3ca;border-top:1px solid #ffffff12}
+.specimen-foot b{color:#dfedf8;font-weight:500}
+.bubble-detail{display:flex;flex-direction:column;min-width:0;min-height:0;padding:18px 20px;background:#fff;border:1px solid var(--line);border-radius:14px}
+.bubble-detail-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.bubble-detail-head h2{font-size:16px;margin:0}.bubble-detail-head small{font-size:11px;color:var(--muted)}
+.bubble-visual{width:100%;min-height:160px;flex:1;display:block}
+.bubble-equation{display:flex;justify-content:center;align-items:center;gap:14px;padding:8px 12px;color:#486279;font-size:14px;background:#f5f8fb;border-radius:9px}
+.bubble-equation strong{font-size:18px;color:#2462a8;font-weight:650}.bubble-equation small{font-size:11px;color:var(--muted)}
+.bubble-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:12px}
+.bubble-metric{background:#f3f6fa;padding:10px 9px;border-radius:8px;min-width:0}.bubble-metric span{display:block;font-size:11px;color:var(--muted)}.bubble-metric strong{display:block;font-size:22px;font-weight:700;margin:4px 0;color:var(--ink);letter-spacing:-.6px}.bubble-metric small{font-size:10px;color:var(--muted)}
+.bubble-metric.pressure{background:#eaf3fb;border-top:2px solid #4c8dbd;padding-top:8px}.bubble-metric.pressure strong{color:#205e9c}
+.bubble-playback{display:flex;align-items:center;gap:10px;margin-top:12px}.bubble-playback button{background:var(--ink);color:white;min-width:84px;font-size:12px;padding:9px 10px}.bubble-playback .bubble-reset{min-width:auto;background:#eef2f7;color:var(--muted)}.bubble-playback label{flex:1;display:block}.bubble-playback input{width:100%;accent-color:#377fb7;cursor:pointer}.bubble-playback output{font-size:12px;color:var(--muted);width:34px;text-align:right}
+.bubble-conclusion{font-size:14px;font-weight:600;margin:12px 0 0;line-height:1.6;min-height:22px;color:#244b71}
+.bubble-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px;color:var(--muted);font-size:11px;padding:0 4px;line-height:1.5}.bubble-bottom a{color:#4c7197;text-decoration:none;white-space:nowrap}.bubble-bottom a:hover{text-decoration:underline}
+.bubble-compare-controls{display:flex;gap:10px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}.bubble-compare-controls label{font-size:11px}.bubble-compare-controls select{font-size:12px;padding:6px 22px 6px 8px}
+.bubble-fixed{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.bubble-fixed label{font-size:10px}.bubble-fixed select{font-size:11px;padding:5px 18px 5px 6px}
+.bubble-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;min-height:0;margin:12px 0}.bubble-case{border:1px solid #dbe5ee;border-radius:10px;padding:12px;display:flex;flex-direction:column;min-width:0;background:#fbfcfe}.bubble-case:last-child{background:#f3f8fc;border-color:#bdd4e7}.bubble-case h3{margin:0;font-size:15px;color:#355d82;display:flex;justify-content:space-between;align-items:center}.bubble-case h3 small{font-size:10px;color:var(--muted);font-weight:400}.bubble-case svg{width:100%;height:100%;min-height:85px;max-height:230px;flex:1}.bubble-case dl{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:7px}.bubble-case dt{font-size:10px;color:var(--muted);margin-bottom:5px}.bubble-case dd{margin:0;font-size:21px;letter-spacing:-.6px;font-weight:700}.bubble-case dd small{font-size:10px;font-weight:400;letter-spacing:0}.bubble-case .case-pressure{color:#23659e}
+.bubble-actual-note{font-size:11px;color:var(--muted);line-height:1.6;margin:0}.bubble-actual-note b{font-weight:600;color:#47647f}
+@media(max-width:1100px){.primary{gap:2px}.primary button{padding:11px 10px;font-size:14px}.bubble-layout{grid-template-columns:minmax(220px,.65fr) minmax(0,1fr)}.bubble-detail{padding:14px}.bubble-panel-head{padding:15px}.bubble-tag{display:none}.bubble-metric strong{font-size:20px}.bubble-workbench{min-height:580px}.bubble-case{padding:10px}.bubble-case dd{font-size:18px}.bubble-case dl{grid-template-columns:1fr}.bubble-case dl>div{display:flex;justify-content:space-between;align-items:center}.bubble-case dt{margin:0}}
+@media(max-width:760px){.bubble-workbench{height:auto;min-height:0}.bubble-layout{grid-template-columns:1fr}.specimen-panel{height:270px}.bubble-detail{min-height:510px}.bubble-visual{height:240px;flex:none}.bubble-modes button{font-size:11px;padding:8px}.bubble-toolbar{padding:8px}.bubble-bottom{align-items:flex-start}.bubble-metric strong{font-size:19px}.bubble-metric span{font-size:10px}.bubble-metrics{gap:5px}.bubble-metric{padding:9px 6px}.bubble-pair{min-height:250px}.bubble-case svg{height:150px}.primary button{font-size:12px;padding:10px 8px}}
+@media(prefers-reduced-motion:reduce){.bubble-workbench *{scroll-behavior:auto}}
+@media(max-width:760px){.bubble-equation{flex-wrap:wrap;gap:6px 12px}.bubble-equation>span,.bubble-equation>small{white-space:nowrap}.bubble-equation strong{width:100%;text-align:center;font-size:14px}}
