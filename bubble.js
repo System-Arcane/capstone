@@ -41,62 +41,54 @@ function specimenDiagram() {
 }
 
 function bubbleNavigation(mode) {
-  return '<div class="bubble-toolbar"><nav class="bubble-modes" aria-label="버블 비교 방식">'+[
-    ['partition','① 셀 수와 가스 분배'],['both','② 압력이 같은 이유'],['focus','③ 온도 3조건 비교'],['actual','④ 내 해석 결과']
-  ].map(([key,label])=>`<button type="button" data-bubble-mode="${key}" onclick="showBubble('${key}')" class="${mode===key?'active':''}" aria-pressed="${mode===key}">${label}</button>`).join('')+'</nav></div>';
+ return '<nav class="bubble-modes" aria-label="버블 비교 방식">'+[['partition','1. 가스 나눠 갖기'],['both','2. 압력 이해하기'],['focus','3. 밀도 확인하기'],['actual','4. 실제 결과 보기']].map(([key,label])=>`<button data-bubble-mode="${key}" onclick="showBubble('${key}')" class="${mode===key?'active':''}" aria-pressed="${mode===key}">${label}</button>`).join('')+'</nav>';
 }
 
-function showBubble(mode = bubbleState.mode) {
-  setPage('bubble');
-  document.body.classList.remove('heat','prediction','video-page');
-  document.body.classList.add('bubble-page');
-  document.querySelector('.controls').hidden=true;$('heatControls').hidden=true;
-  bubbleState.mode=mode;bubbleState.progress=0;
-  if(mode==='focus'){
-    $('charts').innerHTML=`<section class="bubble-workbench bubble-focus-workbench">${bubbleNavigation(mode)}
-      <div class="bubble-focus-controls"><div><b>용융온도 190 · 205 · 220℃</b><span>CBA 1% · 속도 150 mm/s · V/P 90%</span></div>
-      <label>버블 압력 <select id="bubbleFocusPressure" onchange="drawBubbleFocusCharts()"><option value="6">최대</option><option value="7">평균</option></select></label></div>
-      <div id="bubbleFocusCharts"></div>
-      <p class="bubble-focus-note">코어밀도는 내부 폼의 밀도 · 셀 안의 가스 밀도와 다름 · 시편 전체 체적과 개별 셀 체적은 구분</p></section>`;
-    drawBubbleFocusCharts();return;
-  }
-  $('charts').innerHTML=`<section class="bubble-workbench ${mode==='partition'?'partition-workbench':''}">
-    ${bubbleNavigation(mode)}
-    ${mode==='partition'?'<section class="bubble-detail partition-detail" id="bubbleDetail"></section>':`<div class="bubble-layout"><section class="specimen-panel"><div class="bubble-panel-head"><h2>시편 단면</h2><span>구조 모식도</span></div>${specimenDiagram()}<div class="specimen-foot"><span>매끈한 표면 · 내부 셀</span><b>확대 관찰</b></div></section><section class="bubble-detail" id="bubbleDetail"></section></div>`}
-    <div class="bubble-bottom"><span id="bubbleFootnote"></span><a id="bubbleReference" href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/equation-of-state/" target="_blank" rel="noopener noreferrer">이상기체식 근거 ↗</a></div></section>`;
-  if(mode==='actual')drawBubbleComparison();else if(mode==='partition')drawGasPartition();else drawBubblePrinciple();
+function showBubble(mode=bubbleState.mode){
+ setPage('bubble');document.body.classList.remove('heat','prediction','video-page');document.body.classList.add('bubble-page');
+ document.querySelector('.controls').hidden=true;$('heatControls').hidden=true;bubbleState.mode=mode;bubbleState.progress=1;
+ const steps=['partition','both','focus','actual'],i=steps.indexOf(mode);
+ $('charts').innerHTML=`<section class="easy-workbench"><div class="bubble-toolbar">${bubbleNavigation(mode)}</div><section id="bubbleDetail" class="easy-content"></section>
+ <div class="easy-navigation"><button onclick="showBubble('${steps[Math.max(0,i-1)]}')" ${i===0?'disabled':''}>이전</button><span>${i+1} / 4 · ${i<2?'이해를 위한 가정':'Moldflow 해석 데이터'}</span><button onclick="showBubble('${steps[Math.min(3,i+1)]}')" ${i===3?'disabled':''}>다음</button></div></section>`;
+ if(mode==='partition')drawGasPartition();else if(mode==='both')drawBubblePrinciple();else if(mode==='focus')drawDensityOverview();else drawBubbleComparison();
 }
-function drawBubbleFocusCharts(){
-  if($('bubbleFocusCharts'))render(true,1,$('bubbleFocusCharts'),$('bubbleFocusPressure').value);
+function easyHeading(question,context){return `<div class="easy-heading"><h2>${question}</h2><p>${context}</p></div>`;}
+function drawDensityOverview(){
+ $('bubbleDetail').innerHTML=easyHeading('온도를 높이면, 내부 밀도는 어떻게 달라질까?','CBA 1% · 속도 150 mm/s · V/P 90%는 같게 두고 비교')+
+ `<div class="density-common"><span>세 조건 모두 같은 치수</span><strong>지름 108 mm × 두께 3.2 mm</strong><b>전체 체적 ${specimenVolume.toFixed(3)} cm³</b></div>
+ <div class="density-cards">${focusRows.map(r=>`<article class="density-case"><h3>${r[1]}℃</h3><svg viewBox="0 0 240 110" role="img" aria-label="같은 치수의 원형 시편"><path d="M35 45A85 25 0 0 1 205 45V65A85 25 0 0 1 35 65Z" fill="#9cbdd7" stroke="#7599b7"/><ellipse cx="120" cy="45" rx="85" ry="25" fill="#d2e3f0" stroke="#7599b7"/></svg><span>내부 밀도 <small>(코어밀도)</small></span><strong>${r[9].toFixed(4)}<small> g/cm³</small></strong><p>시편 중량 ${r[4].toFixed(2)} g</p></article>`).join('')}</div>
+ <div class="easy-answer">이 세 조건에서는 온도가 높을수록 <b>내부 밀도가 낮아졌음.</b></div>
+ <p class="easy-note">여기서 밀도는 <b>내부 폼의 밀도</b>입니다. 기포 속 가스의 밀도는 아닙니다.</p>
+ <details class="easy-details" ontoggle="if(this.open)drawBubbleFocusCharts()"><summary>전체 그래프·체적 계산 보기</summary><p>전체 시편 체적 V = π × (10.8 / 2)² × 0.32 = 29.315 cm³. 개별 기포의 체적과는 다릅니다.</p><label>버블 압력 <select id="bubbleFocusPressure" onchange="drawBubbleFocusCharts()"><option value="6">최대</option><option value="7">평균</option></select></label><div id="bubbleFocusCharts"></div></details>`;
 }
+function drawBubbleFocusCharts(){const target=$('bubbleFocusCharts');if(target&&target.closest('details').open)render(true,1,target,$('bubbleFocusPressure').value);}
 
 // Equal distribution in the same comparison region. Final T and P are assumed equal.
+
+
 function gasPartition(cellCount,totalGas=80,referenceCount=4){
   const volume=referenceCount/cellCount;
   return {cellCount,totalGas,gasPerCell:totalGas/cellCount,volume,radius:Math.cbrt(volume)};
 }
 function drawGasPartition(){
-  $('bubbleDetail').innerHTML=`<div class="bubble-detail-head"><h2>같은 양의 가스, 나눠 갖는 셀은 더 많다면?</h2><small>동일한 크기의 내부 영역 비교</small></div>
-    <div class="partition-stages"><span id="partitionStage1">핵 생성</span><span id="partitionStage2">가스가 셀로 이동</span><span id="partitionStage3">셀당 가스량 비교</span></div>
-    <svg id="partitionVisual" viewBox="0 0 960 310" role="img" aria-label="같은 총가스량을 셀 4개와 8개가 나눠 갖는 설명용 모식도"></svg>
-    <div class="partition-summary" id="partitionSummary"></div>
-    <div class="bubble-playback"><button id="bubblePlay" type="button" onclick="toggleBubblePlay()">▶ 재생</button><button type="button" class="bubble-reset" onclick="resetBubbleDemo()" aria-label="버블 비교 처음으로">↺</button><label><input id="bubbleProgress" type="range" min="0" max="100" step="1" value="0" aria-label="버블 상태 비교 진행률" oninput="seekBubble(this.value)"></label><output id="bubbleProgressValue">0%</output></div>
-    <p class="bubble-conclusion" id="bubbleConclusion" aria-live="polite"></p>`;
-  $('bubbleFootnote').textContent='같은 총가스량·최종 온도·압력 및 균등 분배 가정 · 개수와 입자는 예시 · 실제 핵생성과 성장은 겹칠 수 있음';
-  $('bubbleReference').href='https://help.autodesk.com/cloudhelp/2023/ENU/MoldflowComm-CLC-Analyses/files/molding-processes/microcellular-inj-molding/MoldflowComm_CLC_Analyses_molding_processes_microcellular_inj_molding_Microcellular_foaming_process_html.html';
-  $('bubbleReference').textContent='핵생성·셀 성장 과정 ↗';
-  updateGasPartition();
-  if(!matchMedia('(prefers-reduced-motion: reduce)').matches)toggleBubblePlay();
+ $('bubbleDetail').innerHTML=easyHeading('셀이 많아지면, 한 셀이 받는 가스는?','셀 = 플라스틱 속 작은 기포 · 두 영역의 전체 가스량은 같다고 가정')+
+ `<svg id="partitionVisual" viewBox="0 0 960 310" role="img" aria-label="같은 총가스량을 적은 셀과 많은 셀이 나눠 갖는 모식도"></svg><div class="partition-summary" id="partitionSummary"></div>
+ <div class="easy-answer" id="bubbleConclusion" aria-live="polite"></div>
+ <div class="bubble-playback"><button id="bubblePlay" onclick="toggleBubblePlay()">▶ 나눠 갖는 과정 보기</button><label><input id="bubbleProgress" type="range" min="0" max="100" value="100" aria-label="버블 상태 비교 진행률" oninput="seekBubble(this.value)"></label><output id="bubbleProgressValue">100%</output></div>
+ <p class="easy-note">그림의 크기 비교는 <b>최종 온도·압력이 같을 때</b>의 예시입니다.</p>
+ <details class="easy-details"><summary>숫자·가정 보기</summary><p>같은 크기의 영역에서 셀 4개와 8개를 비교합니다. 총가스량 80단위를 똑같이 나누면 셀 하나가 받는 양은 20단위와 10단위입니다. 최종 온도·압력이 같으면 개별 셀 체적은 절반, 반지름은 약 0.79배입니다.</p><p>더 많은 핵이 생긴 조건을 가정한 모식도이며, 실제 핵생성과 성장은 겹칠 수 있습니다. 현재 해석에서 총가스량이 같았다고 확인한 결과는 아닙니다.</p><a href="https://help.autodesk.com/cloudhelp/2023/ENU/MoldflowComm-CLC-Analyses/files/molding-processes/microcellular-inj-molding/MoldflowComm_CLC_Analyses_molding_processes_microcellular_inj_molding_Microcellular_foaming_process_html.html" target="_blank" rel="noopener noreferrer">핵생성·셀 성장 과정 근거</a></details>`;
+ updateGasPartition();
 }
+
 function updateGasPartition(){
   const p=bubbleState.progress,growth=Math.max(0,Math.min(1,(p-.2)/.8));
   const stage=p<.2?1:p<1?2:3;
-  [1,2,3].forEach(i=>$('partitionStage'+i).classList.toggle('active',stage===i));
+
   $('partitionVisual').innerHTML=[4,8].map((count,side)=>{
     const model=gasPartition(count),offset=side*480,cols=count===4?2:4,finalRadius=48*model.radius;
     const centers=Array.from({length:count},(_,i)=>[offset+60+(i%cols+.5)*360/cols,106+Math.floor(i/cols)*105]);
     const radius=3+(finalRadius-3)*growth;
-    let svg=`<rect x="${offset+20}" y="42" width="440" height="234" rx="14" fill="${side?'#edf5fc':'#f1f4f7'}" stroke="#ccdce9"/><text x="${offset+240}" y="25" text-anchor="middle" font-size="16" font-weight="650" fill="#234565">${side?'핵이 많은 조건':'핵이 적은 조건'}</text>`;
+    let svg=`<rect x="${offset+20}" y="42" width="440" height="234" rx="14" fill="${side?'#edf5fc':'#f1f4f7'}" stroke="#ccdce9"/><text x="${offset+240}" y="25" text-anchor="middle" font-size="16" font-weight="650" fill="#234565">${side?'셀 많음':'셀 적음'}</text>`;
     centers.forEach(([x,y])=>{svg+=`<circle cx="${x}" cy="${y}" r="${radius}" fill="#d3e7f6" stroke="#4a87b5" stroke-width="1.5" opacity="${Math.min(1,p*8+.2)}"/>`;});
     for(let i=0;i<80;i++){
       const cell=Math.floor(i/(80/count)),within=i%(80/count),[cx,cy]=centers[cell];
@@ -105,79 +97,21 @@ function updateGasPartition(){
       const x=x0+(cx+Math.cos(angle)*dist-x0)*growth,y=y0+(cy+Math.sin(angle)*dist-y0)*growth;
       svg+=`<circle data-gas-dot="${side}" cx="${x}" cy="${y}" r="2.5" fill="#327baa"/>`;
     }
-    return svg+`<text x="${offset+240}" y="303" text-anchor="middle" font-size="14" fill="#365575">예시 셀 ${count}개 · 총가스량 80단위</text>`;
+    return svg+`<text x="${offset+240}" y="303" text-anchor="middle" font-size="14" fill="#365575">셀 ${count}개 · 전체 가스량은 같음</text>`;
   }).join('');
-  $('partitionSummary').innerHTML=[4,8].map(count=>{const m=gasPartition(count);return `<div><span>셀당 가스량</span><strong>${growth===1?m.gasPerCell:'—'} <small>단위</small></strong><span>최종 반지름 비</span><strong>${growth===1?m.radius.toFixed(2):'—'}</strong></div>`;}).join('');
+  $('partitionSummary').innerHTML='<div><span>한 셀이 받는 가스</span><strong>많음</strong></div><div><span>한 셀이 받는 가스</span><strong>적음</strong></div>';
   $('bubbleProgress').value=Math.round(p*100);$('bubbleProgressValue').textContent=Math.round(p*100)+'%';
-  $('bubbleConclusion').textContent=p<.2?'같은 영역에서 더 많은 핵이 생긴 조건을 가정':p<1?'한정된 가스가 각각의 셀로 이동하며 셀이 성장':'같은 영역에서 셀 수밀도 2배 · 셀당 가스량 ½ · 반지름 약 0.79배 (최종 온도·압력 동일)';
+  $('bubbleConclusion').textContent=p<.2?'기포가 자라기 시작할 자리가 적은 조건과 많은 조건':p<1?'같은 양의 가스가 각각의 셀로 모이는 중':'같은 양을 더 많은 셀이 나누면, 한 셀이 받는 양은 적어짐.';
 }
 
-function drawBubblePrinciple() {
-  $('bubbleDetail').innerHTML = `<div class="bubble-detail-head"><h2>버블 확대</h2><small>처음 상태를 1로 비교 · 온도 일정</small></div>
-  <svg class="bubble-visual" viewBox="0 0 620 280" role="img" aria-label="기준 버블과 비교 버블의 가스량, 체적, 압력 변화">
-    <defs><radialGradient id="bubbleFill"><stop stop-color="#fff"/><stop offset=".8" stop-color="#e6f2fb"/><stop offset="1" stop-color="#bcd8ec"/></radialGradient></defs>
-    <text x="162" y="24" text-anchor="middle" fill="#607286" font-size="13">처음 상태</text><text x="458" y="24" text-anchor="middle" fill="#2462a8" font-size="13">비교 상태</text>
-    <path d="M300 134 H320 M314 128 L320 134 L314 140" fill="none" stroke="#b7c8d7" stroke-width="2"/>
-    <circle cx="162" cy="139" r="82" fill="url(#bubbleFill)" stroke="#aac6db" stroke-width="2"/>
-    <circle cx="458" cy="139" r="82" fill="none" stroke="#d4e0eb" stroke-dasharray="4 5"/>
-    <circle id="bubbleCurrentCircle" cx="458" cy="139" r="82" fill="url(#bubbleFill)" stroke="#397fb6" stroke-width="2"/>
-    <g id="bubbleReferenceParticles"></g><g id="bubbleCurrentParticles"></g>
-    <path d="M162 139 H244" stroke="#647e94" stroke-width="1.5"/><text x="201" y="131" text-anchor="middle" font-size="11" fill="#486279">R₀</text>
-    <path id="bubbleRadiusLine" d="M458 139 H540" stroke="#2462a8" stroke-width="1.5"/><text id="bubbleRadiusLabel" x="499" y="131" text-anchor="middle" font-size="11" fill="#2462a8">R = 1.00 R₀</text>
-    <text x="162" y="255" text-anchor="middle" fill="#607286" font-size="14">압력 1.00배</text><text id="bubblePressureLabel" x="458" y="255" text-anchor="middle" fill="#2462a8" font-size="17" font-weight="700">압력 1.00배</text>
-  </svg>
-  <div class="bubble-equation"><span>P = nRT / V</span><small>온도 일정</small><strong>P / P₀ = (n / n₀) ÷ (V / V₀)</strong></div>
-  <div class="bubble-metrics">
-    <div class="bubble-metric"><span>가스량 n</span><strong id="bubbleGas">1.00</strong><small>처음 대비 배수</small></div>
-    <div class="bubble-metric"><span>셀 체적 V</span><strong id="bubbleVolume">1.00</strong><small>처음 대비 배수</small></div>
-    <div class="bubble-metric"><span>가스 몰밀도 n/V</span><strong id="bubbleDensity">1.00</strong><small>처음 대비 배수</small></div>
-    <div class="bubble-metric pressure"><span>내부 압력 P</span><strong id="bubblePressure">1.00</strong><small>처음 대비 배수</small></div>
-  </div>
-  <div class="bubble-playback"><button id="bubblePlay" type="button" onclick="toggleBubblePlay()">▶ 재생</button><button type="button" class="bubble-reset" onclick="resetBubbleDemo()" aria-label="버블 비교 처음으로">↺</button><label><input id="bubbleProgress" type="range" min="0" max="100" step="1" value="0" aria-label="버블 상태 비교 진행률" oninput="seekBubble(this.value)"></label><output id="bubbleProgressValue">0%</output></div>
-  <p class="bubble-conclusion" id="bubbleConclusion" aria-live="polite">가스량과 공간을 같은 비율로 줄이면?</p>`;
-  $('bubbleFootnote').textContent = '등온 이상기체의 상태 비교 · 점은 설명용 가스 표시 · 실제 셀의 성장 과정이나 관측 영상이 아님';
-  createBubbleParticles();
-  updateBubbleRatios();
-  if(!matchMedia('(prefers-reduced-motion: reduce)').matches)toggleBubblePlay();
+function drawBubblePrinciple(){
+ $('bubbleDetail').innerHTML=easyHeading('셀 크기가 작아지면, 압력은 꼭 높아질까?','아니요. 가스도 공간과 같은 비율로 적어지면 압력은 같습니다. (온도 동일)')+
+ `<div class="packing-comparison">${[10,5].map((n,i)=>`<article class="packing-card"><h3>${i?'가스도 공간도 절반':'기준 상태'}</h3><div class="packing-grid">${Array.from({length:n},()=>'<div class="packing-unit"><i></i><i></i><i></i><i></i></div>').join('')}</div><p>가스 <b>${n*4}점</b> / 공간 <b>${n}칸</b></p><strong>한 칸에 4점</strong><span>압력 같음</span></article>`).join('')}</div>
+ <div class="easy-answer">가스의 <b>빽빽함이 같아서</b> 압력도 같음.</div><p class="easy-note">칸은 같은 부피, 점은 같은 가스량을 뜻하는 비유입니다. 칸이 셀 개수를 뜻하지는 않습니다.</p>
+ <details class="easy-details"><summary>공식으로 확인하기</summary><div class="easy-formula">P = nRT / V</div><p>같은 온도에서 가스량 n과 체적 V를 모두 절반으로 줄이면 n/V가 같습니다. 따라서 압력 P도 같습니다.</p><p>공간만 줄고 가스량은 그대로라면 압력이 높아집니다. 작은 셀이라는 사실만으로 높은 압력을 결론낼 수는 없습니다.</p><a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/equation-of-state/" target="_blank" rel="noopener noreferrer">이상기체식 근거</a></details>`;
 }
 
-function createBubbleParticles() {
-  ['bubbleReferenceParticles','bubbleCurrentParticles'].forEach(id=>{
-    $(id).innerHTML=Array.from({length:40},(_,i)=>`<circle data-particle="${i}" r="2.6" fill="#4187b9" opacity=".8"/>`).join('');
-  });
-}
-
-function positionBubbleParticles(time = 0) {
-  const ratios=bubbleRatios(bubbleState.mode,bubbleState.progress), radius=82*ratios.radius;
-  // A 3D shell projection. Particle count is an illustrative amount, never a measured count.
-  ['bubbleReferenceParticles','bubbleCurrentParticles'].forEach((id,group)=>{
-    const host=$(id);if(!host)return;
-    host.querySelectorAll('circle').forEach((p,i)=>{
-      const shell=.25+.65*((i*17%41)/40), angle=i*2.39996+time*.34*(i%2?1:-1), vertical=Math.sin(i*1.7+time*.43);
-      const r=(group?radius:82)-6,cx=group?458:162;
-      p.setAttribute('cx',cx+Math.cos(angle)*shell*r);
-      p.setAttribute('cy',139+Math.sin(angle)*shell*r*Math.sqrt(1-.3*vertical*vertical));
-      const visible=group?Math.max(0,Math.min(1,40*ratios.gas-i)):1;
-      p.setAttribute('opacity',visible*(.55+.3*(vertical+1)/2));
-    });
-  });
-}
-
-function updateBubbleRatios() {
-  if(bubbleState.mode==='partition'){updateGasPartition();return;}
-  const r=bubbleRatios(bubbleState.mode,bubbleState.progress), radius=82*r.radius;
-  [['bubbleGas',r.gas],['bubbleVolume',r.volume],['bubbleDensity',r.density],['bubblePressure',r.pressure]].forEach(([id,v])=>$(id).textContent=v.toFixed(2));
-  $('bubbleCurrentCircle').setAttribute('r',radius);
-  $('bubbleRadiusLine').setAttribute('d',`M458 139 H${458+radius}`);
-  $('bubbleRadiusLabel').setAttribute('x',458+radius/2);
-  $('bubbleRadiusLabel').textContent=`R = ${r.radius.toFixed(2)} R₀`;
-  $('bubblePressureLabel').textContent=`압력 ${r.pressure.toFixed(2)}배`;
-  $('bubbleProgress').value=Math.round(bubbleState.progress*100);
-  $('bubbleProgressValue').textContent=Math.round(bubbleState.progress*100)+'%';
-  positionBubbleParticles(bubbleState.last/1000);
-  if(bubbleState.progress>=1)$('bubbleConclusion').textContent='가스량 ½ · 체적 ½ → 가스 밀도 동일 · 압력 동일';
-  else $('bubbleConclusion').textContent='가스량과 공간이 같은 비율로 줄어 압력은 그대로';
-}
+function updateBubbleRatios(){updateGasPartition();}
 
 function toggleBubblePlay() {
   if(bubbleState.playing){stopBubbleMotion();$('bubblePlay').textContent='▶ 재생';return;}
@@ -199,23 +133,19 @@ function resetBubbleDemo(){seekBubble(0);}
 function changeBubbleAxis(value){bubbleState.axis=+value;const lv=levels[bubbleState.axis];bubbleState.from=lv[0];bubbleState.to=lv[2];drawBubbleComparison();}
 function bubbleRow(level){return data.find(row=>row.slice(0,4).every((v,i)=>v===(i===bubbleState.axis?level:bubbleState.fixed[i])));}
 
-function drawBubbleComparison() {
-  const a=bubbleState.axis;
-  $('bubbleDetail').innerHTML=`<div class="bubble-detail-head"><h2>두 조건의 해석값 비교</h2><small>반지름: 최대값</small></div>
-  <div class="bubble-compare-controls"><label>변수<select id="bubbleAxis" onchange="changeBubbleAxis(this.value)">${[1,0,2,3].map(i=>`<option value="${i}" ${a===i?'selected':''}>${names[i]}</option>`).join('')}</select></label>
-  <label>A<select id="bubbleFrom" onchange="bubbleState.from=+this.value;drawBubbleCases()">${levels[a].map(v=>`<option ${v===bubbleState.from?'selected':''}>${v}</option>`).join('')}</select></label>
-  <label>B<select id="bubbleTo" onchange="bubbleState.to=+this.value;drawBubbleCases()">${levels[a].map(v=>`<option ${v===bubbleState.to?'selected':''}>${v}</option>`).join('')}</select></label>
-  <label>버블 압력<select id="bubblePressureType" onchange="bubbleState.pressure=+this.value;drawBubbleCases()"><option value="6" ${bubbleState.pressure===6?'selected':''}>최대</option><option value="7" ${bubbleState.pressure===7?'selected':''}>평균</option></select></label></div>
-  <div class="bubble-fixed">${names.map((n,i)=>i===a?'':`<label>${n}<select aria-label="비교 고정 ${n}" onchange="bubbleState.fixed[${i}]=+this.value;drawBubbleCases()">${levels[i].map(v=>`<option ${v===bubbleState.fixed[i]?'selected':''}>${v}</option>`).join('')}</select></label>`).join('')}</div>
-  <div class="bubble-pair" id="bubbleCases"></div><p class="bubble-actual-note"><b>원의 크기: 두 반지름에 같은 축척 적용.</b> 셀당 가스량은 표시하지 않음.<br>반지름·압력이 동일 위치·시점의 값인지 확인되지 않음.</p>`;
-  $('bubbleFootnote').textContent='81개 원자료 중 선택한 2조건 · 실제 셀 구조 복원이나 압력 차이의 원인 확정이 아님';
-  drawBubbleCases();
+function drawBubbleComparison(){
+ const a=bubbleState.axis;
+ $('bubbleDetail').innerHTML=easyHeading('실제 해석에서는 크기와 압력이 어떻게 달랐을까?','원 크기는 버블 반지름, 아래 막대는 내부 압력을 비교합니다.')+
+ `<div class="easy-case-controls"><label>조건 A <select id="bubbleFrom" onchange="bubbleState.from=+this.value;drawBubbleCases()">${levels[a].map(v=>`<option ${v===bubbleState.from?'selected':''}>${v}</option>`).join('')}</select></label><span>와</span><label>조건 B <select id="bubbleTo" onchange="bubbleState.to=+this.value;drawBubbleCases()">${levels[a].map(v=>`<option ${v===bubbleState.to?'selected':''}>${v}</option>`).join('')}</select></label><span>${names[a]} (${units[a]}) 비교</span></div>
+ <div class="bubble-pair" id="bubbleCases"></div><div class="easy-answer" id="actualConclusion"></div><p id="actualContext" class="easy-note"></p>
+ <details class="easy-details"><summary>비교 조건·압력 종류 바꾸기</summary><div class="bubble-compare-controls"><label>비교 변수 <select id="bubbleAxis" onchange="changeBubbleAxis(this.value)">${[1,0,2,3].map(i=>`<option value="${i}" ${a===i?'selected':''}>${names[i]}</option>`).join('')}</select></label><label>압력 종류 <select id="bubblePressureType" onchange="bubbleState.pressure=+this.value;drawBubbleCases()"><option value="6" ${bubbleState.pressure===6?'selected':''}>최대</option><option value="7" ${bubbleState.pressure===7?'selected':''}>평균</option></select></label></div><div class="bubble-fixed">${names.map((n,i)=>i===a?'':`<label>${n}<select aria-label="비교 고정 ${n}" onchange="bubbleState.fixed[${i}]=+this.value;drawBubbleCases()">${levels[i].map(v=>`<option ${v===bubbleState.fixed[i]?'selected':''}>${v}</option>`).join('')}</select></label>`).join('')}</div><p>81조건의 해석값을 조회합니다. 반지름은 최대값이며, 두 원에 같은 축척을 적용합니다. 실제 셀의 사진이 아닙니다. 반지름과 압력이 같은 위치·시점의 값인지는 확인되지 않았습니다.</p></details>`;
+ drawBubbleCases();
 }
 
 function drawBubbleCases() {
   const rows=[bubbleRow(bubbleState.from),bubbleRow(bubbleState.to)];
   if(rows.some(r=>!r)){$('bubbleCases').textContent='선택한 조건의 데이터가 없습니다.';return;}
-  const maxR=Math.max(...rows.map(r=>r[5])),p=bubbleState.pressure;
+  const maxR=Math.max(...rows.map(r=>r[5])),p=bubbleState.pressure,maxP=Math.max(...rows.map(r=>r[p]));
   $('bubbleCases').innerHTML=rows.map((r,i)=>{
     const radius=65*r[5]/maxR;
     return `<section class="bubble-case"><h3>${i?'B':'A'} · ${r[bubbleState.axis]} ${units[bubbleState.axis]}<small>해석값</small></h3>
@@ -224,7 +154,12 @@ function drawBubbleCases() {
     <circle cx="120" cy="87" r="65" fill="none" stroke="#dce6ef" stroke-dasharray="3 4"/>
     <circle cx="120" cy="87" r="${radius}" fill="${i?'#c5dff1':'#e1ebf4'}" stroke="${i?'#397fb6':'#7a9bb6'}" stroke-width="1.5"/>
     <path d="M120 87h${radius}" stroke="#365e81"/><circle cx="120" cy="87" r="2" fill="#365e81"/>
-    <text x="120" y="170" text-anchor="middle" font-size="10" fill="#607286">가스량 미표시</text></svg>
-    <dl><div><dt>반지름</dt><dd>${fmt(r[5])} <small>mm</small></dd></div><div><dt>압력 ${p===6?'최대':'평균'}</dt><dd class="case-pressure">${fmt(r[p])} <small>MPa</small></dd></div></dl></section>`;
+    <text x="120" y="170" text-anchor="middle" font-size="10" fill="#607286">반지름 크기 비교</text></svg>
+    <dl><div><dt>반지름</dt><dd>${fmt(r[5])} <small>mm</small></dd></div><div><dt>압력 ${p===6?'최대':'평균'}</dt><dd class="case-pressure">${fmt(r[p])} <small>MPa</small></dd></div></dl><div class="actual-pressure-track" aria-label="같은 축척의 압력 막대"><div style="width:${r[p]/maxP*100}%"></div></div></section>`;
   }).join('');
+  const size=rows[1][5]>rows[0][5]?'커졌고':rows[1][5]<rows[0][5]?'작아졌고':'같고';
+  const pressure=rows[1][p]>rows[0][p]?'높아졌음':rows[1][p]<rows[0][p]?'낮아졌음':'같음';
+  $('actualConclusion').textContent=`A와 비교하면 B의 반지름은 ${size}, 압력은 ${pressure}.`;
+  $('actualContext').textContent=names.map((n,i)=>i===bubbleState.axis?'':n+' '+bubbleState.fixed[i]+' '+units[i]).filter(Boolean).join(' · ')+` · 압력 ${p===6?'최대':'평균'}값 비교`;
+  $('actualContext').innerHTML+='<br><b>관찰한 차이입니다. 1·2번 모식도가 이 차이의 원인을 입증한 것은 아닙니다.</b>';
 }
