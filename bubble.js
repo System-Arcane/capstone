@@ -145,18 +145,18 @@ function seekBubble(value){stopBubbleMotion();bubbleState.progress=Number(value)
 function resetBubbleDemo(){seekBubble(0);}
 
 function changeBubbleAxis(value){bubbleState.axis=+value;const lv=levels[bubbleState.axis];bubbleState.from=lv[0];bubbleState.to=lv[2];drawBubbleComparison();}
-function bubbleRow(level){return data.find(row=>row.slice(0,4).every((v,i)=>v===(i===bubbleState.axis?level:bubbleState.fixed[i])));}
+function bubbleRow(level){return focusRows.find(row=>row.slice(0,4).every((v,i)=>v===(i===bubbleState.axis?level:bubbleState.fixed[i])));}
 
 function drawBubbleComparison() {
-  const a=bubbleState.axis;
+  bubbleState.axis=1;bubbleState.fixed=[1,205,150,90];const a=1;
   $('bubbleDetail').innerHTML=`<div class="bubble-detail-head"><h2>두 조건의 해석값 비교</h2><small>반지름: 최대값</small></div>
-  <div class="bubble-compare-controls"><label>변수<select id="bubbleAxis" onchange="changeBubbleAxis(this.value)">${[1,0,2,3].map(i=>`<option value="${i}" ${a===i?'selected':''}>${names[i]}</option>`).join('')}</select></label>
+  <div class="bubble-compare-controls"><label>변수<select id="bubbleAxis" onchange="changeBubbleAxis(this.value)">${[1].map(i=>`<option value="${i}" ${a===i?'selected':''}>${names[i]}</option>`).join('')}</select></label>
   <label>A<select id="bubbleFrom" onchange="bubbleState.from=+this.value;drawBubbleCases()">${levels[a].map(v=>`<option ${v===bubbleState.from?'selected':''}>${v}</option>`).join('')}</select></label>
   <label>B<select id="bubbleTo" onchange="bubbleState.to=+this.value;drawBubbleCases()">${levels[a].map(v=>`<option ${v===bubbleState.to?'selected':''}>${v}</option>`).join('')}</select></label>
   <label>버블 압력<select id="bubblePressureType" onchange="bubbleState.pressure=+this.value;drawBubbleCases()"><option value="6" ${bubbleState.pressure===6?'selected':''}>최대</option><option value="7" ${bubbleState.pressure===7?'selected':''}>평균</option></select></label></div>
-  <div class="bubble-fixed">${names.map((n,i)=>i===a?'':`<label>${n}<select aria-label="비교 고정 ${n}" onchange="bubbleState.fixed[${i}]=+this.value;drawBubbleCases()">${levels[i].map(v=>`<option ${v===bubbleState.fixed[i]?'selected':''}>${v}</option>`).join('')}</select></label>`).join('')}</div>
+  <div class="focus-fixed">CBA 1% · 속도 150 mm/s · V/P 90%</div>
   <div class="bubble-pair" id="bubbleCases"></div><p class="bubble-actual-note"><b>원의 크기: 두 반지름에 같은 축척 적용.</b> 셀당 가스량은 표시하지 않음.<br>반지름·압력이 동일 위치·시점의 값인지 확인되지 않음.</p>`;
-  $('bubbleFootnote').textContent='81개 원자료 중 선택한 2조건 · 실제 셀 구조 복원이나 압력 차이의 원인 확정이 아님';
+  $('bubbleFootnote').textContent='검토 대상 온도 3조건 중 선택한 2조건 · 실제 셀 구조 복원이나 압력 차이의 원인 확정이 아님';
   drawBubbleCases();
 }
 
