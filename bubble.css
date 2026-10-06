@@ -36,3 +36,15 @@ body.bubble-page #charts{display:block;overflow:auto}
 @media(max-width:760px){.bubble-workbench{height:auto;min-height:0}.bubble-layout{grid-template-columns:1fr}.specimen-panel{height:270px}.bubble-detail{min-height:510px}.bubble-visual{height:240px;flex:none}.bubble-modes button{font-size:11px;padding:8px}.bubble-toolbar{padding:8px}.bubble-bottom{align-items:flex-start}.bubble-metric strong{font-size:19px}.bubble-metric span{font-size:10px}.bubble-metrics{gap:5px}.bubble-metric{padding:9px 6px}.bubble-pair{min-height:250px}.bubble-case svg{height:150px}.primary button{font-size:12px;padding:10px 8px}}
 @media(prefers-reduced-motion:reduce){.bubble-workbench *{scroll-behavior:auto}}
 @media(max-width:760px){.bubble-equation{flex-wrap:wrap;gap:6px 12px}.bubble-equation>span,.bubble-equation>small{white-space:nowrap}.bubble-equation strong{width:100%;text-align:center;font-size:14px}}
+
+/* Gas partition story: two equal-size regions, fewer/more nuclei. */
+.partition-detail{justify-content:space-between;gap:10px}
+.partition-stages{display:flex;justify-content:center;gap:10px;margin:8px 0}
+.partition-stages span{border-radius:20px;padding:7px 20px;font-size:12px;background:#eff3f7;color:#6a7e91}
+.partition-stages span.active{background:#dcecf9;color:#205e9c;font-weight:650}
+#partitionVisual{display:block;position:static;width:100%;min-height:200px;flex:1}
+.partition-summary{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.partition-summary>div{display:flex;align-items:center;justify-content:center;gap:12px;padding:10px;background:#f1f6fb;border-radius:10px}
+.partition-summary span{font-size:11px;color:#607286}.partition-summary strong{font-size:22px;color:#205e9c}.partition-summary small{font-size:11px;font-weight:400}
+.partition-detail .bubble-conclusion{text-align:center;margin:0}
+@media(max-width:760px){.partition-detail{min-height:480px}.partition-summary>div{flex-wrap:wrap;gap:5px 10px}.partition-stages span{padding:7px 9px;font-size:11px}.partition-detail .bubble-detail-head{flex-wrap:wrap}.partition-detail .bubble-detail-head h2{font-size:14px}#partitionVisual{min-height:150px}.partition-summary strong{font-size:18px}}

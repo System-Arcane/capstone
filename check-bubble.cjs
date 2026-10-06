@@ -10,12 +10,13 @@ vm.runInContext(fs.readFileSync(__dirname + '/focus-data.js', 'utf8'), context);
 vm.runInContext(fs.readFileSync(__dirname + '/bubble.js', 'utf8'), context);
 vm.runInContext(`
   const near = (a,b) => { if(Math.abs(a-b)>1e-10)throw Error(a+' != '+b); };
-  for(const mode of ['volume','both'])for(const progress of [0,.1,.5,.9,1]){
+  for(const mode of ['both'])for(const progress of [0,.1,.5,.9,1]){
     const r=bubbleRatios(mode,progress);
     near(r.radius**3,r.volume);near(r.pressure*r.volume,r.gas);
     if(mode==='both')near(r.pressure,1);
   }
-  near(bubbleRatios('volume',1).pressure,2);
+  for(const count of [4,8,16]){const m=gasPartition(count);near(m.gasPerCell*count,80);near(m.radius**3,m.volume);near(m.volume*count,4);}
+  near(gasPartition(8).gasPerCell,10);
   near(bubbleRatios('both',1).gas,.5);
   for(const row of data)for(let axis=0;axis<4;axis++){
     bubbleState.axis=axis;bubbleState.fixed=row.slice(0,4);
@@ -30,3 +31,5 @@ assert.equal((html.match(/id="bubbleButton"/g)||[]).length, 1);
 assert.ok(html.indexOf('id="videoButton"') < html.indexOf('id="bubbleButton"'));
 assert.ok(html.indexOf('id="bubbleButton"') < html.indexOf('id="graphButton"'));
 console.log('PASS: state equations, radius/volume relation, all 81 condition lookups, corrected densities, geometry, tab order.');
+
+assert.equal((html.match(/id="focusButton"/g)||[]).length,0);
