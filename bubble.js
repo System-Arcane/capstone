@@ -1,6 +1,6 @@
 // The ideal-gas demonstration uses relative states at fixed temperature.
 // It is deliberately independent of the Moldflow results and trained models.
-const bubbleState = { mode: 'partition', progress: 0, playing: false, frame: 0, last: 0,
+const bubbleState = { mode: 'both', progress: 0, playing: false, frame: 0, last: 0,
   axis: 1, fixed: [1,205,150,90], from: 190, to: 220, pressure: 6 };
 
 function bubbleRatios(mode, progress) {
@@ -11,6 +11,7 @@ function bubbleRatios(mode, progress) {
 
 function stopBubbleMotion() {
   cancelAnimationFrame(bubbleState.frame);
+  if(typeof radiusLab!=='undefined'){cancelAnimationFrame(radiusLab.frame);radiusLab.playing=false;}
   bubbleState.playing = false;
   bubbleState.last = 0;
 }
@@ -41,13 +42,13 @@ function specimenDiagram() {
 }
 
 function bubbleNavigation(mode) {
- return '<nav class="bubble-modes" aria-label="버블 비교 방식">'+[['partition','1. 가스 나눠 갖기'],['both','2. 압력 이해하기'],['focus','3. 밀도 확인하기'],['actual','4. 실제 결과 보기']].map(([key,label])=>`<button data-bubble-mode="${key}" onclick="showBubble('${key}')" class="${mode===key?'active':''}" aria-pressed="${mode===key}">${label}</button>`).join('')+'</nav>';
+ return '<nav class="bubble-modes" aria-label="버블 비교 방식">'+[['both','압력·반지름'],['partition','셀 수·가스량'],['focus','온도·밀도'],['actual','해석값 비교']].map(([key,label])=>`<button data-bubble-mode="${key}" onclick="showBubble('${key}')" class="${mode===key?'active':''}" aria-pressed="${mode===key}">${label}</button>`).join('')+'</nav>';
 }
 
 function showBubble(mode=bubbleState.mode){
  setPage('bubble');document.body.classList.remove('heat','prediction','video-page');document.body.classList.add('bubble-page');
  document.querySelector('.controls').hidden=true;$('heatControls').hidden=true;bubbleState.mode=mode;bubbleState.progress=1;
- const steps=['partition','both','focus','actual'],i=steps.indexOf(mode);
+ const steps=['both','partition','focus','actual'],i=steps.indexOf(mode);
  $('charts').innerHTML=`<section class="easy-workbench"><div class="bubble-toolbar">${bubbleNavigation(mode)}</div><section id="bubbleDetail" class="easy-content"></section>
  <div class="easy-navigation"><button onclick="showBubble('${steps[Math.max(0,i-1)]}')" ${i===0?'disabled':''}>이전</button><span>${i+1} / 4 · ${i<2?'이해를 위한 가정':'Moldflow 해석 데이터'}</span><button onclick="showBubble('${steps[Math.min(3,i+1)]}')" ${i===3?'disabled':''}>다음</button></div></section>`;
  if(mode==='partition')drawGasPartition();else if(mode==='both')drawBubblePrinciple();else if(mode==='focus')drawDensityOverview();else drawBubbleComparison();
@@ -104,11 +105,45 @@ function updateGasPartition(){
   $('bubbleConclusion').textContent=p<.2?'기포가 자라기 시작할 자리가 적은 조건과 많은 조건':p<1?'같은 양의 가스가 각각의 셀로 모이는 중':'같은 양을 더 많은 셀이 나누면, 한 셀이 받는 양은 적어짐.';
 }
 
+// This is a prescribed-state ideal-gas comparison, not a bubble-growth solver.
+const radiusLab={radius:Math.cbrt(.5),frame:0,playing:false};
+function radiusState(radius,gas){const volume=radius**3;return {radius,gas,volume,pressure:gas/volume};}
 function drawBubblePrinciple(){
- $('bubbleDetail').innerHTML=easyHeading('셀 크기가 작아지면, 압력은 꼭 높아질까?','아니요. 가스도 공간과 같은 비율로 적어지면 압력은 같습니다. (온도 동일)')+
- `<div class="packing-comparison">${[10,5].map((n,i)=>`<article class="packing-card"><h3>${i?'가스도 공간도 절반':'기준 상태'}</h3><div class="packing-grid">${Array.from({length:n},()=>'<div class="packing-unit"><i></i><i></i><i></i><i></i></div>').join('')}</div><p>가스 <b>${n*4}점</b> / 공간 <b>${n}칸</b></p><strong>한 칸에 4점</strong><span>압력 같음</span></article>`).join('')}</div>
- <div class="easy-answer">가스의 <b>빽빽함이 같아서</b> 압력도 같음.</div><p class="easy-note">칸은 같은 부피, 점은 같은 가스량을 뜻하는 비유입니다. 칸이 셀 개수를 뜻하지는 않습니다.</p>
- <details class="easy-details"><summary>공식으로 확인하기</summary><div class="easy-formula">P = nRT / V</div><p>같은 온도에서 가스량 n과 체적 V를 모두 절반으로 줄이면 n/V가 같습니다. 따라서 압력 P도 같습니다.</p><p>공간만 줄고 가스량은 그대로라면 압력이 높아집니다. 작은 셀이라는 사실만으로 높은 압력을 결론낼 수는 없습니다.</p><a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/equation-of-state/" target="_blank" rel="noopener noreferrer">이상기체식 근거</a></details>`;
+ $('bubbleDetail').classList.add('radius-lab');
+ $('bubbleDetail').innerHTML=`<div class="radius-lab-heading"><h2>같은 크기, 다른 압력</h2><span>온도 동일 · 설명 모형</span></div>
+ <div class="radius-presets" aria-label="반지름 비교 장면"><button onclick="setRadiusScene('small')">작은 셀</button><button onclick="setRadiusScene('base')">기준 크기</button><button onclick="setRadiusScene('large')">큰 셀</button><button id="radiusPlay" onclick="playRadiusScene()">▶ 변화 보기</button></div>
+ <div id="radiusComparison" class="radius-comparison"></div>
+ <div class="radius-control"><label for="radiusInput">비교 셀 반지름</label><span>작게</span><input id="radiusInput" type="range" min="65" max="115" step="0.1" value="${radiusLab.radius*100}" oninput="setLabRadius(+this.value/100)"/><span>크게</span><output id="radiusOutput"></output></div>
+ <div class="radius-takeaway"><span>같은 반지름</span><strong>가스가 더 많이 들어 있으면, 압력이 더 높음</strong></div>
+ <details class="easy-details"><summary>계산·가정 보기</summary><p>온도가 일정한 이상기체에서 압력은 가스량 ÷ 체적에 비례합니다. 셀을 구로 가정하면 체적은 반지름의 세제곱에 비례합니다.</p><p>기준은 반지름·가스량·체적·압력을 모두 1로 둡니다. 가운데는 가스량을 1로 유지하고, 오른쪽은 가스량을 체적과 같은 비율로 바꿉니다. 체적을 절반으로 정하면 반지름은 약 0.794배이며, 압력은 각각 2배와 1배입니다.</p><p>체적을 정해 놓고 비교하는 모형입니다. 수지의 점도·주변 압력·냉각을 포함한 실제 셀 성장 해석이나 측정된 원인 검증이 아닙니다.</p><a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/equation-of-state/" target="_blank" rel="noopener noreferrer">이상기체식 근거</a></details>`;
+ updateRadiusLab();
+}
+function setLabRadius(r){cancelAnimationFrame(radiusLab.frame);radiusLab.playing=false;radiusLab.radius=Math.max(.65,Math.min(1.15,r));updateRadiusLab();}
+function setRadiusScene(scene){setLabRadius(scene==='small'?Math.cbrt(.5):scene==='large'?1.12:1);}
+function playRadiusScene(){
+ if(radiusLab.playing){setLabRadius(radiusLab.radius);return;}
+ radiusLab.playing=true;const start=performance.now(),end=Math.cbrt(.5);
+ function frame(now){if(!radiusLab.playing||!$('radiusComparison'))return;const p=Math.min(1,(now-start)/2400),ease=p*p*(3-2*p);radiusLab.radius=1+(end-1)*ease;updateRadiusLab();if(p<1)radiusLab.frame=requestAnimationFrame(frame);else{radiusLab.playing=false;updateRadiusLab();}}
+ radiusLab.frame=requestAnimationFrame(frame);
+}
+function pressureColor(p){return p>1.01?'#ce7133':p<.99?'#378fa1':'#397fb6';}
+function updateRadiusLab(){
+ const r=radiusLab.radius,states=[radiusState(1,1),radiusState(r,1),radiusState(r,r**3)];
+ $('radiusComparison').innerHTML=states.map((s,i)=>{
+  const color=pressureColor(s.pressure),R=65*s.radius,dots=Math.max(1,Math.round(48*s.gas));let particles='';
+  for(let j=0;j<dots;j++){const angle=j*2.39996,dist=(R-9)*Math.sqrt((j+.5)/dots);particles+=`<circle cx="${150+Math.cos(angle)*dist}" cy="${91+Math.sin(angle)*dist}" r="2.5" fill="${color}" opacity=".8"/>`;}
+  const pressureLabel=i===0?'기준':s.pressure>1.01?'압력 높음':s.pressure<.99?'압력 낮음':'압력 같음';
+  return `<article class="radius-case ${i===1?'fixed-gas':i===2?'scaled-gas':'reference-gas'}" data-radius-case="${i}" style="--case-color:${color}"><h3>${['기준 셀','가스량 그대로',s.gas<.99?'가스량도 줄임':s.gas>1.01?'가스량도 늘림':'가스량도 같음'][i]}</h3>
+  <svg viewBox="60 0 180 180" role="img" aria-label="반지름 ${(s.radius*100).toFixed(1)}퍼센트, 가스량 ${(s.gas*100).toFixed(1)}퍼센트, 압력 ${s.pressure.toFixed(2)}배">
+  <circle cx="150" cy="91" r="65" fill="none" stroke="#c9d7e4" stroke-dasharray="3 4"/><circle cx="150" cy="91" r="${R}" fill="${i===1?'#fff5ed':'#eef6fc'}" stroke="${color}" stroke-width="2"/>${particles}
+  <path d="M150 91H${150+R}" stroke="${color}" stroke-width="1.6"/><circle cx="150" cy="91" r="2" fill="${color}"/></svg>
+  <div class="radius-percent">반지름 <b>${(s.radius*100).toFixed(0)}%</b></div>
+  <div class="gas-amount">가스량 <b>${(s.gas*100).toFixed(0)}%</b><span class="gas-meter"><i style="width:${s.gas/Math.max(...states.map(v=>v.gas))*100}%"></i></span></div>
+  <div class="pressure-readout"><span>${pressureLabel}</span><strong>${s.pressure.toFixed(2)}<small>배</small></strong></div>
+  <div class="pressure-meter"><i style="width:${s.pressure/Math.max(...states.map(v=>v.pressure))*100}%"></i></div></article>`;
+ }).join('');
+ $('radiusInput').value=r*100;$('radiusOutput').textContent=Math.round(r*100)+'%';$('radiusPlay').textContent=radiusLab.playing?'Ⅱ 멈춤':'▶ 변화 보기';
+ document.querySelectorAll('.radius-presets button').forEach((button,i)=>button.classList.toggle('active',i===0&&Math.abs(r-Math.cbrt(.5))<.0001||i===1&&r===1||i===2&&r===1.12));
 }
 
 function updateBubbleRatios(){updateGasPartition();}
