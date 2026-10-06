@@ -1,5 +1,5 @@
 // Source: the user's corrected Google Sheet, read 2026-10-06.
-// Only these three conditions are currently in scope. Core density is not a bulk average.
+// These three conditions are an additional comparison, independent of the existing 81-row views. Core density is not a bulk average.
 const focusSource = 'https://docs.google.com/spreadsheets/d/14_fSGZI3BPZbKjwi7fBr8eoa4g82ip2MLP32IxYyDUU/edit#gid=747014466';
 const specimenDimensions = { diameter:108, thickness:3.2 };
 const specimenVolume = Math.PI * specimenDimensions.diameter ** 2 * specimenDimensions.thickness / 4000;

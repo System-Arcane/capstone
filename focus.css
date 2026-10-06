@@ -1,10 +1,11 @@
-/* Temporary presentation scope while other conditions are being rechecked. */
-#heatButton,#predictionButton,#mode,#tabs,#filters{display:none!important}
-.controls:has(#mode)>label:has(#mode){display:none}
+/* Additional three-condition view; existing pages keep their own controls and layout. */
+body.focus-page #mode,body.focus-page #tabs,body.focus-page #filters{display:none!important}
+body:not(.focus-page) .focus-scope{display:none}
+body.focus-page .controls>label:has(#mode){display:none}
 .focus-scope{font-size:13px;color:#365575;flex:1;line-height:1.6}.focus-scope b{color:#172b40;margin-right:14px}.focus-scope span{white-space:nowrap}
-body:not(.bubble-page):not(.video-page) #charts{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+body.focus-page #charts{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
 #charts .geometry-card{padding:16px 20px;display:flex;flex-direction:column;justify-content:space-between;background:#f5f9fd}
 .geometry-card h2{margin:0;font-size:16px}.geometry-card svg{position:static;width:100%;height:90px;min-height:60px;flex:1;display:block}.geometry-card .geometry-volume{display:flex;align-items:baseline;justify-content:space-between;gap:8px;border-top:1px solid #dce6ef;padding-top:10px}.geometry-volume span{font-size:12px;color:#607286}.geometry-volume strong{font-size:24px;color:#205e9c}.geometry-volume small{font-size:12px;font-weight:400}.geometry-card p{margin:7px 0 0;font-size:10px;line-height:1.4;color:#607286}.geometry-card a{color:#486d92;text-decoration:none}
 .focus-fixed{color:#607286;font-size:11px;line-height:1.7;margin-top:10px}
-@media(min-width:721px) and (max-width:1100px){body:not(.bubble-page):not(.video-page) #charts{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(210px,1fr));overflow:auto}}
-@media(max-width:720px){body:not(.bubble-page):not(.video-page) #charts{grid-template-columns:1fr;grid-template-rows:none}#charts .geometry-card{min-height:230px}.focus-scope b{display:block}.focus-scope span{white-space:normal}}
+@media(min-width:721px) and (max-width:1100px){body.focus-page #charts{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(210px,1fr));overflow:auto}}
+@media(max-width:720px){body.focus-page #charts{grid-template-columns:1fr;grid-template-rows:none}#charts .geometry-card{min-height:230px}.focus-scope b{display:block}.focus-scope span{white-space:normal}}
