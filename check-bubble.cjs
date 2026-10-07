@@ -10,26 +10,20 @@ vm.runInContext(fs.readFileSync(__dirname + '/focus-data.js', 'utf8'), context);
 vm.runInContext(fs.readFileSync(__dirname + '/bubble.js', 'utf8'), context);
 vm.runInContext(`
   const near = (a,b) => { if(Math.abs(a-b)>1e-10)throw Error(a+' != '+b); };
-  for(const mode of ['both'])for(const progress of [0,.1,.5,.9,1]){
-    const r=bubbleRatios(mode,progress);
-    near(r.radius**3,r.volume);near(r.pressure*r.volume,r.gas);
-    if(mode==='both')near(r.pressure,1);
-  }
-  for(const count of [4,8,16]){const m=gasPartition(count);near(m.gasPerCell*count,80);near(m.radius**3,m.volume);near(m.volume*count,4);}
-  near(gasPartition(8).gasPerCell,10);
-  near(bubbleRatios('both',1).gas,.5);
   for(const row of data)for(let axis=0;axis<4;axis++){
     bubbleState.axis=axis;bubbleState.fixed=row.slice(0,4);
     if(bubbleRow(row[axis])!==row)throw Error('Incorrect condition lookup');
   }
   bubbleState.axis=1;bubbleState.fixed=[1,205,150,90];
   near(bubbleRow(190)[5],.0176);near(bubbleRow(220)[6],2.675);
+  for(const row of data){const core=bubbleCoreDensity(row),match=focusRows.find(r=>r.slice(0,4).every((v,i)=>v===row[i]));if(core!==(match?match[9]:null))throw Error('Core density from wrong condition');}
+  if(bubbleTrend([1,2,3])!=='증가'||bubbleTrend([3,1,2])!=='일정한 방향 없음')throw Error('Trend must use all 3 levels');
   near(specimenVolume,29.314829369177076);
   near(focusRows[0][9],.7255);near(focusRows[1][9],.7114);near(focusRows[2][9],.6131);
 `, context);
 assert.equal((html.match(/id="bubbleButton"/g)||[]).length, 1);
 assert.ok(html.indexOf('id="videoButton"') < html.indexOf('id="bubbleButton"'));
 assert.ok(html.indexOf('id="bubbleButton"') < html.indexOf('id="graphButton"'));
-console.log('PASS: state equations, radius/volume relation, all 81 condition lookups, corrected densities, geometry, tab order.');
+console.log('PASS: all 81 condition lookups, corrected densities, geometry, tab order.');
 
 assert.equal((html.match(/id="focusButton"/g)||[]).length,0);

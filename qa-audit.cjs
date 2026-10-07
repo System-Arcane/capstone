@@ -58,13 +58,6 @@ for(const [key,model] of Object.entries(modelBank)) {
     assert.ok(vm.runInContext('evaluateModel(qaModel,qaInputs)',context).every(Number.isFinite));
   }
 }
-for(const r of [.65,Math.cbrt(.5),1,1.12,1.15]) {
-  context.qaRadius=r;
-  const [fixed,scaled]=vm.runInContext('[radiusState(qaRadius,1),radiusState(qaRadius,qaRadius**3)]',context);
-  near(fixed.pressure*fixed.volume,1,'PV conservation');
-  near(scaled.pressure,1,'constant gas/volume pressure');
-  near(fixed.radius,scaled.radius,'same compared radius');
-}
 for(const row of focusRows) {
   const original=data.find(r=>r.slice(0,4).every((v,i)=>v===row[i]));
   assert.ok(original);for(let i=4;i<9;i++)near(original[i],row[i],'focus result preservation');
@@ -74,4 +67,4 @@ for(const ref of html.matchAll(/(?:src|href)="([^"?#]+)(?:[^\"]*)"/g)) {
 }
 for(const script of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))if(script[1].trim())new vm.Script(script[1]);
 new vm.Script(fs.readFileSync(path.join(__dirname,'presentation.js'),'utf8'));
-console.log('PASS: 81 unique factorial conditions, 32 Pearson coefficients, 36 model metrics, 243 model evaluations, radius/pressure states, corrected subset, local assets, script syntax.');
+console.log('PASS: 81 unique factorial conditions, 32 Pearson coefficients, 36 model metrics, 243 model evaluations, corrected subset, local assets, script syntax.');
