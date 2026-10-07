@@ -1,6 +1,6 @@
 // The ideal-gas demonstration uses relative states at fixed temperature.
 // It is deliberately independent of the Moldflow results and trained models.
-const bubbleState = { mode: 'both', progress: 0, playing: false, frame: 0, last: 0,
+const bubbleState = { mode: 'partition', progress: 0, playing: false, frame: 0, last: 0,
   axis: 1, fixed: [1,205,150,90], from: 190, to: 220, pressure: 6 };
 
 function bubbleRatios(mode, progress) {
@@ -42,13 +42,13 @@ function specimenDiagram() {
 }
 
 function bubbleNavigation(mode) {
- return '<nav class="bubble-modes" aria-label="버블 비교 방식">'+[['both','압력·반지름'],['partition','셀 수·가스량'],['focus','온도·밀도'],['actual','해석값 비교']].map(([key,label])=>`<button data-bubble-mode="${key}" onclick="showBubble('${key}')" class="${mode===key?'active':''}" aria-pressed="${mode===key}">${label}</button>`).join('')+'</nav>';
+ return '<nav class="bubble-modes" aria-label="버블 비교 방식">'+[['partition','셀 수·가스량'],['both','압력·반지름'],['focus','온도·밀도'],['actual','해석값 비교']].map(([key,label])=>`<button data-bubble-mode="${key}" onclick="showBubble('${key}')" class="${mode===key?'active':''}" aria-pressed="${mode===key}">${label}</button>`).join('')+'</nav>';
 }
 
 function showBubble(mode=bubbleState.mode){
  setPage('bubble');document.body.classList.remove('heat','prediction','video-page');document.body.classList.add('bubble-page');
- document.querySelector('.controls').hidden=true;$('heatControls').hidden=true;bubbleState.mode=mode;bubbleState.progress=1;
- const steps=['both','partition','focus','actual'],i=steps.indexOf(mode);
+ document.querySelector('.controls').hidden=true;$('heatControls').hidden=true;bubbleState.mode=mode;bubbleState.progress=mode==='partition'?0:1;
+ const steps=['partition','both','focus','actual'],i=steps.indexOf(mode);
  $('charts').innerHTML=`<section class="easy-workbench"><div class="bubble-toolbar">${bubbleNavigation(mode)}</div><section id="bubbleDetail" class="easy-content"></section>
  <div class="easy-navigation"><button onclick="showBubble('${steps[Math.max(0,i-1)]}')" ${i===0?'disabled':''}>이전</button><span>${i+1} / 4 · ${i<2?'이해를 위한 가정':'Moldflow 해석 데이터'}</span><button onclick="showBubble('${steps[Math.min(3,i+1)]}')" ${i===3?'disabled':''}>다음</button></div></section>`;
  if(mode==='partition')drawGasPartition();else if(mode==='both')drawBubblePrinciple();else if(mode==='focus')drawDensityOverview();else drawBubbleComparison();
@@ -72,12 +72,12 @@ function gasPartition(cellCount,totalGas=80,referenceCount=4){
   return {cellCount,totalGas,gasPerCell:totalGas/cellCount,volume,radius:Math.cbrt(volume)};
 }
 function drawGasPartition(){
- $('bubbleDetail').innerHTML=easyHeading('셀이 많아지면, 한 셀이 받는 가스는?','셀 = 플라스틱 속 작은 기포 · 두 영역의 전체 가스량은 같다고 가정')+
+ $('bubbleDetail').innerHTML=easyHeading('셀이 많아지면, 한 셀이 받는 가스는?','기포핵이 가스를 받아 자라면 셀이 됨 · 두 영역의 전체 가스량은 같다고 가정')+
  `<svg id="partitionVisual" viewBox="0 0 960 310" role="img" aria-label="같은 총가스량을 적은 셀과 많은 셀이 나눠 갖는 모식도"></svg><div class="partition-summary" id="partitionSummary"></div>
  <div class="easy-answer" id="bubbleConclusion" aria-live="polite"></div>
- <div class="bubble-playback"><button id="bubblePlay" onclick="toggleBubblePlay()">▶ 나눠 갖는 과정 보기</button><label><input id="bubbleProgress" type="range" min="0" max="100" value="100" aria-label="버블 상태 비교 진행률" oninput="seekBubble(this.value)"></label><output id="bubbleProgressValue">100%</output></div>
- <p class="easy-note">그림의 크기 비교는 <b>최종 온도·압력이 같을 때</b>의 예시입니다.</p>
- <details class="easy-details"><summary>숫자·가정 보기</summary><p>같은 크기의 영역에서 셀 4개와 8개를 비교합니다. 총가스량 80단위를 똑같이 나누면 셀 하나가 받는 양은 20단위와 10단위입니다. 최종 온도·압력이 같으면 개별 셀 체적은 절반, 반지름은 약 0.79배입니다.</p><p>더 많은 핵이 생긴 조건을 가정한 모식도이며, 실제 핵생성과 성장은 겹칠 수 있습니다. 현재 해석에서 총가스량이 같았다고 확인한 결과는 아닙니다.</p><a href="https://help.autodesk.com/cloudhelp/2023/ENU/MoldflowComm-CLC-Analyses/files/molding-processes/microcellular-inj-molding/MoldflowComm_CLC_Analyses_molding_processes_microcellular_inj_molding_Microcellular_foaming_process_html.html" target="_blank" rel="noopener noreferrer">핵생성·셀 성장 과정 근거</a></details>`;
+ <div class="bubble-playback"><button id="bubblePlay" onclick="toggleBubblePlay()">▶ 핵이 자라는 과정 보기</button><label><input id="bubbleProgress" type="range" min="0" max="100" value="100" aria-label="버블 상태 비교 진행률" oninput="seekBubble(this.value)"></label><output id="bubbleProgressValue">100%</output></div>
+ <p class="easy-note"><span id="partitionLegend">작은 파란 점: 가스 · 주황색 고리: 기포핵</span><br>그림의 크기 비교는 <b>최종 온도·압력이 같을 때</b>의 예시입니다.</p>
+ <details class="easy-details"><summary>숫자·가정 보기</summary><p>같은 크기의 영역에서 셀 4개와 8개를 비교합니다. 총가스량 80단위를 똑같이 나누면 셀 하나가 받는 양은 20단위와 10단위입니다. 최종 온도·압력이 같으면 개별 셀 체적은 절반, 반지름은 약 0.79배입니다.</p><p>더 많은 핵이 생긴 조건을 가정한 모식도이며, 실제 핵생성과 성장은 겹칠 수 있습니다. 이 그림은 생긴 핵이 모두 셀로 성장하고, 셀의 합쳐짐·소멸은 없다고 가정합니다. 셀 수 밀도는 단위 체적당 셀 수이며, 최종 수밀도만으로 최초 핵 개수를 확정할 수는 없습니다. 현재 해석에서 총가스량이 같았다고 확인한 결과는 아닙니다.</p><a href="https://help.autodesk.com/cloudhelp/2023/ENU/MoldflowComm-CLC-Analyses/files/molding-processes/microcellular-inj-molding/MoldflowComm_CLC_Analyses_molding_processes_microcellular_inj_molding_Microcellular_foaming_process_html.html" target="_blank" rel="noopener noreferrer">핵생성·셀 성장 과정 근거</a></details>`;
  updateGasPartition();
 }
 
@@ -88,9 +88,9 @@ function updateGasPartition(){
   $('partitionVisual').innerHTML=[4,8].map((count,side)=>{
     const model=gasPartition(count),offset=side*480,cols=count===4?2:4,finalRadius=48*model.radius;
     const centers=Array.from({length:count},(_,i)=>[offset+60+(i%cols+.5)*360/cols,106+Math.floor(i/cols)*105]);
-    const radius=3+(finalRadius-3)*growth;
-    let svg=`<rect x="${offset+20}" y="42" width="440" height="234" rx="14" fill="${side?'#edf5fc':'#f1f4f7'}" stroke="#ccdce9"/><text x="${offset+240}" y="25" text-anchor="middle" font-size="16" font-weight="650" fill="#234565">${side?'셀 많음':'셀 적음'}</text>`;
-    centers.forEach(([x,y])=>{svg+=`<circle cx="${x}" cy="${y}" r="${radius}" fill="#d3e7f6" stroke="#4a87b5" stroke-width="1.5" opacity="${Math.min(1,p*8+.2)}"/>`;});
+    const radius=8+(finalRadius-8)*growth;
+    let svg=`<rect x="${offset+20}" y="42" width="440" height="234" rx="14" fill="${side?'#edf5fc':'#f1f4f7'}" stroke="#ccdce9"/><text x="${offset+240}" y="25" text-anchor="middle" font-size="16" font-weight="650" fill="#234565">${side?'핵이 많이 생긴 조건':'핵이 적게 생긴 조건'}</text>`;
+    centers.forEach(([x,y])=>{svg+=`<circle cx="${x}" cy="${y}" r="${radius}" fill="${p<.2?'#ffead0':'#d3e7f6'}" stroke="${p<.2?'#c77a22':'#4a87b5'}" stroke-width="${p<.2?2.5:1.5}"/>`;});
     for(let i=0;i<80;i++){
       const cell=Math.floor(i/(80/count)),within=i%(80/count),[cx,cy]=centers[cell];
       const angle=within*2.39996,dist=finalRadius*.75*Math.sqrt((within+.5)/(80/count));
@@ -98,11 +98,12 @@ function updateGasPartition(){
       const x=x0+(cx+Math.cos(angle)*dist-x0)*growth,y=y0+(cy+Math.sin(angle)*dist-y0)*growth;
       svg+=`<circle data-gas-dot="${side}" cx="${x}" cy="${y}" r="2.5" fill="#327baa"/>`;
     }
-    return svg+`<text x="${offset+240}" y="303" text-anchor="middle" font-size="14" fill="#365575">셀 ${count}개 · 전체 가스량은 같음</text>`;
+    return svg+`<text x="${offset+240}" y="303" text-anchor="middle" font-size="14" fill="#365575">${p<.2?'기포핵':'셀'} ${count}개 · 전체 가스량은 같음</text>`;
   }).join('');
-  $('partitionSummary').innerHTML='<div><span>한 셀이 받는 가스</span><strong>많음</strong></div><div><span>한 셀이 받는 가스</span><strong>적음</strong></div>';
+  $('partitionLegend').textContent=p<.2?'작은 파란 점: 가스 · 주황색 고리: 기포핵':'작은 파란 점: 가스 · 큰 원: 성장한 셀';
+  $('partitionSummary').innerHTML=p<.2?'<div><span>생긴 기포핵</span><strong>4개</strong></div><div><span>생긴 기포핵</span><strong>8개</strong></div>':'<div><span>한 셀이 받는 가스</span><strong>많음</strong></div><div><span>한 셀이 받는 가스</span><strong>적음</strong></div>';
   $('bubbleProgress').value=Math.round(p*100);$('bubbleProgressValue').textContent=Math.round(p*100)+'%';
-  $('bubbleConclusion').textContent=p<.2?'기포가 자라기 시작할 자리가 적은 조건과 많은 조건':p<1?'같은 양의 가스가 각각의 셀로 모이는 중':'같은 양을 더 많은 셀이 나누면, 한 셀이 받는 양은 적어짐.';
+  $('bubbleConclusion').textContent=p<.2?'작은 기포핵이 먼저 생성됨. 왼쪽 4개, 오른쪽 8개.':p<1?'기포핵으로 가스가 모이고, 핵이 자라 셀이 되는 중':'같은 양을 더 많은 셀이 나누면, 한 셀이 받는 양은 적어짐.';
 }
 
 // This is a prescribed-state ideal-gas comparison, not a bubble-growth solver.
