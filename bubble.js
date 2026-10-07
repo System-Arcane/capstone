@@ -18,7 +18,7 @@ function showBubble(mode=bubbleState.mode){
  document.querySelector('.controls').hidden=true;$('heatControls').hidden=true;bubbleState.mode=mode;bubbleState.progress=1;
  const steps=['process','actual','focus'],i=steps.indexOf(mode);
  $('charts').innerHTML=`<section class="easy-workbench"><div class="bubble-toolbar">${bubbleNavigation(mode)}</div><section id="bubbleDetail" class="easy-content"></section>
- <div class="easy-navigation"><button onclick="showBubble('${steps[Math.max(0,i-1)]}')" ${i===0?'disabled':''}>이전</button><span>${i+1} / 3 · ${i===0?'공식 공정 설명':'Moldflow 해석 데이터'}</span><button onclick="showBubble('${steps[Math.min(2,i+1)]}')" ${i===2?'disabled':''}>다음</button></div></section>`;
+ <div class="easy-navigation"><button onclick="showBubble('${steps[Math.max(0,i-1)]}')" ${i===0?'disabled':''}>이전</button><span>${i+1} / 3 · ${i===0?'공식 공정 설명':i===1?'해석값·해석 가설':'Moldflow 해석 데이터'}</span><button onclick="showBubble('${steps[Math.min(2,i+1)]}')" ${i===2?'disabled':''}>다음</button></div></section>`;
  if(mode==='process')drawFoamingProcess();else if(mode==='focus')drawDensityOverview();else drawBubbleComparison();
 }
 function easyHeading(question,context){return `<div class="easy-heading"><h2>${question}</h2><p>${context}</p></div>`;}
@@ -62,12 +62,29 @@ function drawBubbleComparison(expanded=false){
  const a=bubbleState.axis;
  $('bubbleDetail').classList.add('result-comparison');
  $('bubbleDetail').innerHTML=`<div class="results-heading"><div><h2>셀 수 밀도·크기 비교</h2><p id="actualContext"></p></div><label>버블 압력<select id="bubblePressureType" onchange="bubbleState.pressure=+this.value;drawBubbleCases()"><option value="6" ${bubbleState.pressure===6?'selected':''}>최대</option><option value="7" ${bubbleState.pressure===7?'selected':''}>평균</option></select></label></div>
+ <button class="hypothesis-link" onclick="drawGrowthHypothesis()">온도 3조건 · 핵생성·성장 해석 보기 ↗</button>
  <div class="result-cases" id="bubbleCases"></div>
  <div class="result-trends" id="actualConclusion" aria-live="polite"></div>
  <p class="result-note">수밀도와 반지름은 최대값 · 원은 크기 비교용 · 수밀도만으로 최초 핵 개수를 확정하지 않음</p>
  <details class="easy-details" ${expanded?'open':''}><summary>다른 공정조건 비교 · 추출 기준</summary><div class="bubble-compare-controls"><label>비교 변수<select id="bubbleAxis" onchange="changeBubbleAxis(this.value)">${[1,0,2,3].map(i=>`<option value="${i}" ${a===i?'selected':''}>${names[i]}</option>`).join('')}</select></label></div><div class="bubble-fixed">${names.map((n,i)=>i===a?'':`<label>${n}<select aria-label="비교 고정 ${n}" onchange="bubbleState.fixed[${i}]=+this.value;drawBubbleCases()">${levels[i].map(v=>`<option ${v===bubbleState.fixed[i]?'selected':''}>${v}</option>`).join('')}</select></label>`).join('')}</div>
  <p>각 열은 하나의 해석 조건입니다. 81조건에서 나머지 세 변수를 고정한 세 수준을 비교합니다. 셀 수 밀도와 반지름은 최대값, 버블 압력은 선택한 최대/평균값입니다. 각각의 값이 동일 위치·시점에서 추출되었다고 확인한 결과는 아닙니다.</p><p>코어밀도는 수정된 온도3조건에서만 표시합니다. 나머지 조건에는 ‘자료 없음’을 표시하며 보간하지 않습니다. 코어밀도는 내부 폼의 밀도이며 기포 속 가스 밀도가 아닙니다.</p><p>반지름 원은 공통 길이 축척, 수밀도·압력 막대는 각각 0부터 공통 최댓값까지의 축척입니다. 화면에 보이는 원 개수는 실제 셀 수가 아닙니다. 포밍 공정 그림은 결과의 발생 과정을 이해하기 위한 모식도이며 관찰된 차이의 원인을 입증하지 않습니다. 최대값들로 총 셀 체적이나 셀당 가스량을 역산하지 않습니다.</p></details>`;
  drawBubbleCases();
+}
+
+// Equal summed sphere volume is an explicit illustrative assumption, not a fitted result.
+function growthExample(count){
+ const radius=18*Math.cbrt(6/count),cols=count===6?3:6,rows=count/cols;
+ return Array.from({length:count},(_,i)=>({x:30+(i%cols)*200/(cols-1),y:rows===1?55:28+Math.floor(i/cols)*54/(rows-1),radius}));
+}
+function growthPicture(count,grown){
+ return `<svg viewBox="0 0 260 110" role="img" aria-label="${count}개 ${grown?'셀이 성장한 모습':'기포 핵'}: 설명용 예시"><rect x="1" y="1" width="258" height="108" rx="9" fill="#71b7eb"/>${growthExample(count).map(c=>`<circle cx="${c.x}" cy="${c.y}" r="${grown?c.radius:2.5}" fill="white"/>`).join('')}</svg>`;
+}
+function drawGrowthHypothesis(){
+ $('bubbleDetail').className='easy-content growth-comparison';
+ $('bubbleDetail').innerHTML=`<div class="growth-heading"><div><span class="growth-eyebrow">온도 3조건 · 관찰과 해석</span><h2>셀이 많아지면, 하나의 크기는?</h2></div><button onclick="$('bubbleDetail').className='easy-content';drawBubbleComparison()">해석값으로 돌아가기</button></div>
+ <div class="growth-observed"><div><b>확인한 해석값</b><small>CBA 1% · 속도 150 mm/s · V/P 90%</small></div>${focusRows.map(r=>`<article><b>${r[1]}℃</b><span>수밀도 <strong>${(r[8]/1e6).toFixed(2)}백만</strong><small> 개/cm³</small></span><span>반지름 <strong>${r[5].toFixed(4)}</strong><small> mm</small></span></article>`).join('')}</div>
+ <div class="growth-model"><div class="growth-model-heading"><b>해석 가설: 핵이 더 많이 생겼다면?</b><span>전체 셀 체적이 같다고 가정</span></div><div class="growth-grid"><div></div><b>① 핵생성</b><div></div><b>② 셀 성장</b><div class="growth-row-label">핵이 적음<small>예시 6개</small></div>${growthPicture(6,false)}<span class="growth-arrow" aria-hidden="true">→</span>${growthPicture(6,true)}<div class="growth-row-label">핵이 많음<small>예시 18개</small></div>${growthPicture(18,false)}<span class="growth-arrow" aria-hidden="true">→</span>${growthPicture(18,true)}</div><div class="growth-equation"><span>같은 전체 셀 체적</span><b>÷</b><span>더 많은 셀</span><b>=</b><strong>셀 하나의 체적 감소</strong></div></div>
+ <p class="growth-limit"><b>같은 시편 체적 ≠ 같은 전체 셀 체적.</b> 온도에 따른 핵생성 증가·성장 제한은 확인할 가설입니다.</p><p class="growth-footnote">수밀도·반지름은 최대값. 그림의 개수·배치는 예시이며 실제 단면이 아닙니다. 셀 합체 없이 구형으로 성장한다고 가정합니다.</p>`;
 }
 function drawBubbleCases(){
  const a=bubbleState.axis,rows=levels[a].map(bubbleRow),p=bubbleState.pressure;
