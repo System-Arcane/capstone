@@ -8,7 +8,7 @@ const context = vm.createContext({});
 for (const name of ['data', 'names', 'correlations', 'modelBank']) {
   vm.runInContext(html.match(new RegExp('^const ' + name + '=.*$', 'm'))[0], context);
 }
-for (const name of ['focus-data.js', 'bubble.js']) {
+for (const name of ['focus-data.js', 'bubble.js', 'foaming-process.js']) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, name), 'utf8'), context);
 }
 vm.runInContext(html.match(/^function evaluateModel.*$/m)[0], context);
