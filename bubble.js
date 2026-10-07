@@ -60,9 +60,8 @@ function bubbleTrend(values){
 }
 function drawBubbleComparison(expanded=false){
  const a=bubbleState.axis;
- $('bubbleDetail').classList.add('result-comparison');
- $('bubbleDetail').innerHTML=`<div class="results-heading"><div><h2>셀 수 밀도·크기 비교</h2><p id="actualContext"></p></div><label>버블 압력<select id="bubblePressureType" onchange="bubbleState.pressure=+this.value;drawBubbleCases()"><option value="6" ${bubbleState.pressure===6?'selected':''}>최대</option><option value="7" ${bubbleState.pressure===7?'selected':''}>평균</option></select></label></div>
- <button class="hypothesis-link" onclick="drawGrowthHypothesis()">온도 3조건 · 핵생성·성장 해석 보기 ↗</button>
+ $('bubbleDetail').className='easy-content result-comparison';
+ $('bubbleDetail').innerHTML=`<div class="results-heading"><div><h2>셀 수 밀도·크기 비교</h2><p id="actualContext"></p></div><div class="results-actions"><button class="hypothesis-link" onclick="drawGrowthHypothesis()">온도 3조건 · 핵생성·성장 해석 보기 ↗</button><label>버블 압력<select id="bubblePressureType" onchange="bubbleState.pressure=+this.value;drawBubbleCases()"><option value="6" ${bubbleState.pressure===6?'selected':''}>최대</option><option value="7" ${bubbleState.pressure===7?'selected':''}>평균</option></select></label></div></div>
  <div class="result-cases" id="bubbleCases"></div>
  <div class="result-trends" id="actualConclusion" aria-live="polite"></div>
  <p class="result-note">수밀도와 반지름은 최대값 · 원은 크기 비교용 · 수밀도만으로 최초 핵 개수를 확정하지 않음</p>
