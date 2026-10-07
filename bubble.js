@@ -47,7 +47,7 @@ function bubbleNavigation(mode) {
 
 function showBubble(mode=bubbleState.mode){
  setPage('bubble');document.body.classList.remove('heat','prediction','video-page');document.body.classList.add('bubble-page');
- document.querySelector('.controls').hidden=true;$('heatControls').hidden=true;bubbleState.mode=mode;bubbleState.progress=mode==='process'?0:1;
+ document.querySelector('.controls').hidden=true;$('heatControls').hidden=true;bubbleState.mode=mode;bubbleState.progress=1;
  const steps=['process','both','focus','actual'],i=steps.indexOf(mode);
  $('charts').innerHTML=`<section class="easy-workbench"><div class="bubble-toolbar">${bubbleNavigation(mode)}</div><section id="bubbleDetail" class="easy-content"></section>
  <div class="easy-navigation"><button onclick="showBubble('${steps[Math.max(0,i-1)]}')" ${i===0?'disabled':''}>이전</button><span>${i+1} / 4 · ${i===0?'공식 공정 설명':i===1?'이해를 위한 가정':'Moldflow 해석 데이터'}</span><button onclick="showBubble('${steps[Math.min(3,i+1)]}')" ${i===3?'disabled':''}>다음</button></div></section>`;
@@ -120,7 +120,7 @@ function toggleBubblePlay() {
   bubbleState.playing=true;bubbleState.last=0;$('bubblePlay').textContent='Ⅱ 일시정지';
   function frame(time){
     if(!bubbleState.playing||!$('bubbleProgress'))return;
-    if(bubbleState.last)bubbleState.progress=Math.min(1,bubbleState.progress+Math.min(time-bubbleState.last,60)/16000);
+    if(bubbleState.last)bubbleState.progress=Math.min(1,bubbleState.progress+Math.min(time-bubbleState.last,60)/7000);
     bubbleState.last=time;updateBubbleRatios();
     if(bubbleState.progress<1)bubbleState.frame=requestAnimationFrame(frame);
     else{bubbleState.playing=false;$('bubblePlay').textContent='↻ 다시 재생';}
